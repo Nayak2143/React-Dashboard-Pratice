@@ -35,9 +35,18 @@ export const Authprovider = ({ children }: { children: React.ReactNode }) => {
     setError(null);
     try {
       const response = await api.get("/auth/me");
-      console.log("user reso=pnsdfjv", response);
+      console.log("user res", response);
       if (response?.data?.success) {
-        setUser(response?.data?.user);
+        const user = response.data.user;
+
+        // ✅ Extract permission keys
+        const permissions =
+          user?.role?.permissions?.map((p: any) => p.key) || [];
+
+        setUser({
+          ...user,
+          permissions,
+        });
       }
     } catch (error: any) {
       const errorMessage =

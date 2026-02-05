@@ -1,24 +1,23 @@
-// src/routes/AppRoutes.tsx
 import { Routes, Route } from "react-router-dom";
-import AppLayout from "@/components/layout/AppLayout";
-import Dashboard from "@/pages/Dashboard";
-import User from "@/pages/User";
 
 import PublicRoute from "./PublicRoute";
 import PrivateRoute from "./PrivateRoute";
-import Forbidden from "@/pages/Forbidden";
-import Login from "@/pages/Auth/Login";
-import AuthLayout from "@/components/layout/AuthLayout";
 import PermissionRoute from "./PermissionRoute";
-import Blogs from "@/pages/Blogs/Blogs";
-import AddNewBlog from "@/pages/Blogs/AddNewBlog";
+
+import AuthLayout from "@/components/layout/AuthLayout";
+import AppLayout from "@/components/layout/AppLayout";
+
+import Login from "@/pages/Auth/Login";
 import ForgotPassword from "@/pages/Auth/ForgotPassword";
 import ResetPassword from "@/pages/Auth/ResetPassword";
+import Forbidden from "@/pages/Forbidden";
+import { privateRoutes } from "./RouteConfig";
 
 export default function AppRoutes() {
   return (
     <Routes>
-      {/* PUBLIC */}
+      {/* ================= PUBLIC ================= */}
+
       <Route
         path="/login"
         element={
@@ -41,7 +40,7 @@ export default function AppRoutes() {
         }
       />
 
-            <Route
+      <Route
         path="/reset-password"
         element={
           <PublicRoute>
@@ -52,55 +51,35 @@ export default function AppRoutes() {
         }
       />
 
-      {/* PRIVATE */}
-      <Route
-        path="/"
-        element={
-          <PrivateRoute>
-            <AppLayout>
-              <Dashboard />
-            </AppLayout>
-          </PrivateRoute>
-        }
-      />
+      {/* ================= PRIVATE AUTO ================= */}
 
-      <Route
-        path="/users"
-        element={
-          <PrivateRoute>
-            <PermissionRoute permission="users.view">
-              <AppLayout>
-                <User />
-              </AppLayout>
-            </PermissionRoute>
-          </PrivateRoute>
-        }
-      />
+      {privateRoutes.map((route) => {
+        const Page = route.component;
 
-      <Route
-        path="/blogs"
-        element={
-          <PrivateRoute>
-            <PermissionRoute permission="users.view">
-              <AppLayout>
-                <Blogs />
-              </AppLayout>
-            </PermissionRoute>
-          </PrivateRoute>
-        }
-      />
-      <Route
-        path="/blogs/add"
-        element={
-          <PrivateRoute>
-            <PermissionRoute permission="users.view">
-              <AppLayout>
-                <AddNewBlog />
-              </AppLayout>
-            </PermissionRoute>
-          </PrivateRoute>
-        }
-      />
+        return (
+          <Route
+            key={route.path}
+            path={route.path}
+            element={
+              <PrivateRoute>
+                {route.permission ? (
+                  <PermissionRoute permission={route.permission}>
+                    <AppLayout>
+                      <Page />
+                    </AppLayout>
+                  </PermissionRoute>
+                ) : (
+                  <AppLayout>
+                    <Page />
+                  </AppLayout>
+                )}
+              </PrivateRoute>
+            }
+          />
+        );
+      })}
+
+      {/* ================= FORBIDDEN ================= */}
 
       <Route path="/403" element={<Forbidden />} />
     </Routes>

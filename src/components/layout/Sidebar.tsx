@@ -4,15 +4,15 @@ import clsx from "clsx";
 
 import { useAuth } from "@/context/AuthContext";
 import Logo from "@/assets/Logo/LOGO4.webp";
-
 import LogoutDialog from "../Dialog/LogoutDialog";
 
 import {
   FileText,
   LayoutDashboard,
-  Settings,
   Users,
   ChevronDown,
+  Shield,
+  ShieldCheck,
 } from "lucide-react";
 
 /* -------------------------------- MENU CONFIG -------------------------------- */
@@ -21,7 +21,6 @@ const menu = [
   {
     label: "Dashboard",
     path: "/",
-    permission: null,
     icon: LayoutDashboard,
   },
   {
@@ -32,29 +31,32 @@ const menu = [
   },
   {
     label: "Blogs",
-    permission: "users.view",
     icon: FileText,
+    permission: "blogs.view",
     children: [
       {
         label: "All Blogs",
         path: "/blogs",
-      }
+        permission: "blogs.view",
+      },
+      {
+        label: "Add Blog",
+        path: "/blogs/add",
+        permission: "blogs.create",
+      },
     ],
   },
   {
-    label: "Settings",
-    permission: "settings.manage",
-    icon: Settings,
-    children: [
-      {
-        label: "General",
-        path: "/settings",
-      },
-      {
-        label: "Profile",
-        path: "/settings/profile",
-      },
-    ],
+    label: "Roles",
+    path: "/roles",
+    icon: Shield,
+    permission: "roles.view",
+  },
+  {
+    label: "Permissions",
+    path: "/permissions",
+    icon: ShieldCheck,
+    permission: "permission.view",
   },
 ];
 
@@ -67,7 +69,7 @@ export default function Sidebar() {
 
   const [openMenus, setOpenMenus] = useState<string[]>([]);
 
-  /* ---- auto expand parent when child active ---- */
+  /* ---------- AUTO EXPAND ACTIVE PARENT ---------- */
   useEffect(() => {
     menu.forEach((item) => {
       if (item.children?.some((c) => location.pathname.startsWith(c.path))) {
@@ -84,27 +86,43 @@ export default function Sidebar() {
     );
   };
 
+  /* ---------- PERMISSION HELPERS ---------- */
+
+  const hasPermission = (perm?: string) => {
+    if (!perm) return true;
+
+    // ⭐ Admin bypass
+    if (user?.role?.name === "admin") return true;
+
+    return user?.permissions?.includes(perm);
+  };
+
+  /* -------------------------------- UI -------------------------------- */
+
   return (
     <aside className="w-64 bg-slate-100 dark:bg-zinc-800 lg:ms-2 lg:my-2 lg:rounded-xl flex flex-col h-full lg:h-auto overflow-hidden">
-      {/* -------------------- LOGO -------------------- */}
-      <div className="h-24 flex items-center px-6 text-lg font-semibold dark:bg-gray-300/50">
+      {/* ---------------- LOGO ---------------- */}
+      <div className="h-24 flex items-center px-6 dark:bg-gray-300/50">
         <img src={Logo} alt="Logo" className="w-full h-20 object-contain" />
       </div>
 
-      {/* -------------------- NAV -------------------- */}
+      {/* ---------------- NAV ---------------- */}
       <nav className="flex-1 p-3 space-y-1 overflow-y-auto">
         {menu.map((item) => {
-          if (item?.permission && !user?.permissions?.includes(item?.permission)) {
-            return null;
-          }
-
           const Icon = item.icon;
+
+          const parentAllowed = hasPermission(item.permission);
+
+          const childAllowed =
+            item.children?.some((c) => hasPermission(c.permission)) ?? false;
+
+          if (!parentAllowed && !childAllowed) return null;
 
           const isParentActive =
             item.children?.some((c) => location.pathname.startsWith(c.path)) ||
             location.pathname === item.path;
 
-          /* ----------- SIMPLE LINK ----------- */
+          /* ---------- SIMPLE LINK ---------- */
           if (!item.children) {
             return (
               <NavLink
@@ -126,7 +144,7 @@ export default function Sidebar() {
             );
           }
 
-          /* ----------- SUB MENU ----------- */
+          /* ---------- SUB MENU ---------- */
           return (
             <div key={item.label} className="space-y-1">
               <button
@@ -153,23 +171,25 @@ export default function Sidebar() {
 
               {openMenus.includes(item.label) && (
                 <div className="ml-6 space-y-1">
-                  {item.children.map((child) => (
-                    <NavLink
-                      key={child.path}
-                      to={child.path}
-                      className={({ isActive }) =>
-                        clsx(
-                          "block rounded-md px-3 py-2 text-sm transition-colors",
-                          "hover:bg-white dark:hover:bg-gray-100",
-                          isActive
-                            ? "bg-orange-50 text-orange-600 dark:bg-orange-100"
-                            : "text-muted-foreground",
-                        )
-                      }
-                    >
-                      {child.label}
-                    </NavLink>
-                  ))}
+                  {item.children
+                    .filter((child) => hasPermission(child.permission))
+                    .map((child) => (
+                      <NavLink
+                        key={child.path}
+                        to={child.path}
+                        className={({ isActive }) =>
+                          clsx(
+                            "block rounded-md px-3 py-2 text-sm transition-colors",
+                            "hover:bg-white dark:hover:bg-gray-100",
+                            isActive
+                              ? "bg-orange-50 text-orange-600 dark:bg-orange-100"
+                              : "text-muted-foreground",
+                          )
+                        }
+                      >
+                        {child.label}
+                      </NavLink>
+                    ))}
                 </div>
               )}
             </div>
@@ -177,7 +197,7 @@ export default function Sidebar() {
         })}
       </nav>
 
-      {/* -------------------- LOGOUT -------------------- */}
+      {/* ---------------- LOGOUT ---------------- */}
       <div className="my-2 mx-2">
         <LogoutDialog
           onConfirm={() => {

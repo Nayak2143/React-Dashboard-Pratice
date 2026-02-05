@@ -11,7 +11,9 @@ interface Props {
 export default function PermissionRoute({ children, permission }: Props) {
   const { user } = useAuth();
 
-  if (!user || !user.permissions.includes(permission)) {
+  const allowed = user?.permissions?.includes(permission);
+
+  if (!allowed) {
     return <Navigate to="/403" replace />;
   }
 
