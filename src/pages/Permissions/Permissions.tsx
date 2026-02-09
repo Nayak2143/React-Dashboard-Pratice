@@ -35,7 +35,6 @@ export default function Permissions() {
   const fetchPermissions = async () => {
     try {
       const res = await api.get("/permissions");
-      console.log("all permissions res", res?.data.permissions);
       setPermissions(res?.data?.permissions);
     } catch (err) {
       console.error("Failed to fetch roles:", err);
@@ -51,8 +50,6 @@ export default function Permissions() {
   const handleAddPermission = async () => {
     try {
       const res = await api.post("/permissions/create", { label, key });
-      console.log("add permission res", res?.data);
-
       toast.success(res.data.message);
       setSheetOpen(false);
       setLabel("");

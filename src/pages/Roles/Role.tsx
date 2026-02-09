@@ -16,6 +16,7 @@ import { useNavigate } from "react-router-dom";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
+import { toast } from "sonner";
 
 /* ---------------- TYPES ---------------- */
 
@@ -46,6 +47,7 @@ export default function RolePage() {
   const [roleName, setRoleName] = useState("");
   const [selectedPerms, setSelectedPerms] = useState<number[]>([]);
   const [saving, setSaving] = useState(false);
+  const [editRoleId, setEditRoleId] = useState<Number | null>(null);
 
   /* -------- FETCH DATA -------- */
 
@@ -79,26 +81,49 @@ export default function RolePage() {
 
   const togglePermission = (id: number) => {
     setSelectedPerms((prev) =>
-      prev.includes(id)
-        ? prev.filter((p) => p !== id)
-        : [...prev, id]
+      prev.includes(id) ? prev.filter((p) => p !== id) : [...prev, id],
     );
   };
 
   /* -------- CREATE ROLE -------- */
-
   const handleAddRole = async () => {
     if (!roleName) return;
 
     try {
       setSaving(true);
-
-      await api.post("/roles", {
+      const res = await api.post("/roles", {
         name: roleName,
         permissions: selectedPerms,
       });
 
+      console.log("role add res", res.data);
+
       // Reset
+      setRoleName("");
+      setSelectedPerms([]);
+      setSheetOpen(false);
+      toast.success(res.data.message);
+      fetchRoles();
+    } catch (err) {
+      console.error("Role creation failed:", err);
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleUpdateRole = async () => {
+    if (!editRoleId) return;
+    try {
+      setSaving(true);
+      const res = await api.put(`/roles/${editRoleId}`, {
+        name: roleName,
+        permissions: selectedPerms,
+      });
+      console.log("update role & permission res", res?.data);
+      toast.success(res.data.message);
+
+      // RESET FORM
+      setEditRoleId(null);
       setRoleName("");
       setSelectedPerms([]);
       setSheetOpen(false);
@@ -126,8 +151,8 @@ export default function RolePage() {
         <FormSheet
           open={sheetOpen}
           onOpenChange={setSheetOpen}
-          title="Add Role"
-          description="Create role and assign permissions"
+          title={editRoleId ? "Update Role" : "Add Role"}
+          description="Create or update role permissions"
           trigger={
             <Button variant="outline" size="sm">
               <Plus className="h-4 w-4 mr-2" />
@@ -152,15 +177,10 @@ export default function RolePage() {
 
               <div className="max-h-56 overflow-y-auto border rounded-md p-3 space-y-3">
                 {permissions.map((perm) => (
-                  <div
-                    key={perm.id}
-                    className="flex items-center space-x-2"
-                  >
+                  <div key={perm.id} className="flex items-center space-x-2">
                     <Checkbox
                       checked={selectedPerms.includes(perm.id)}
-                      onCheckedChange={() =>
-                        togglePermission(perm.id)
-                      }
+                      onCheckedChange={() => togglePermission(perm.id)}
                     />
                     <label className="text-sm cursor-pointer">
                       {perm.label}
@@ -173,10 +193,14 @@ export default function RolePage() {
             {/* Save */}
             <Button
               className="w-full"
-              onClick={handleAddRole}
+              onClick={editRoleId ? handleUpdateRole : handleAddRole}
               disabled={saving}
             >
-              {saving ? "Saving..." : "Create Role"}
+              {saving
+                ? "Saving..."
+                : editRoleId
+                  ? "Update Role"
+                  : "Create Role"}
             </Button>
           </div>
         </FormSheet>
@@ -213,9 +237,7 @@ export default function RolePage() {
             {!loading &&
               roles.map((role) => (
                 <TableRow key={role.id}>
-                  <TableCell className="font-medium">
-                    {role.name}
-                  </TableCell>
+                  <TableCell className="font-medium">{role.name}</TableCell>
 
                   <TableCell>
                     <div className="flex flex-wrap gap-2">
@@ -234,9 +256,12 @@ export default function RolePage() {
                     <Button
                       size="sm"
                       variant="outline"
-                      onClick={() =>
-                        navigate(`/roles/edit/${role.id}`)
-                      }
+                      onClick={() => {
+                        setEditRoleId(role?.id);
+                        setRoleName(role?.name);
+                        setSelectedPerms(role?.permissions?.map((p) => p?.id));
+                        setSheetOpen(true);
+                      }}
                     >
                       Edit
                     </Button>
