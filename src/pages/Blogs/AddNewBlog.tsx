@@ -73,7 +73,6 @@ export default function AddNewBlog() {
             {/* CONTENT */}
             <div className="rounded-xl border p-6 space-y-4 bg-card">
               <Textarea rows={8} {...register("content")}/>
-              <Textarea rows={5} {...register("extraContent")} />
             </div>
 
             <PointListEditor />

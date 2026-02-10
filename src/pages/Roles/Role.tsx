@@ -17,6 +17,7 @@ import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
 import { toast } from "sonner";
+import { Badge } from "@/components/ui/badge";
 
 /* ---------------- TYPES ---------------- */
 
@@ -55,6 +56,7 @@ export default function RolePage() {
     try {
       setLoading(true);
       const res = await api.get("/roles");
+      console.log("all roles", res?.data);
       setRoles(res?.data?.roles ?? []);
     } catch (err) {
       console.error(err);
@@ -119,7 +121,6 @@ export default function RolePage() {
         name: roleName,
         permissions: selectedPerms,
       });
-      console.log("update role & permission res", res?.data);
       toast.success(res.data.message);
 
       // RESET FORM
@@ -240,16 +241,13 @@ export default function RolePage() {
                   <TableCell className="font-medium">{role.name}</TableCell>
 
                   <TableCell>
-                    <div className="flex flex-wrap gap-2">
-                      {role.permissions.map((perm) => (
-                        <span
-                          key={perm.id}
-                          className="px-2 py-1 text-xs bg-gray-200 rounded-md"
-                        >
-                          {perm.label}
-                        </span>
-                      ))}
-                    </div>
+                    <span
+                      className="px-3 py-1 text-sm font-semibold rounded-full 
+                   bg-orange-100 text-orange-700
+                   dark:bg-orange-900/40 dark:text-orange-300"
+                    >
+                      {role.permissions?.length || 0} Permissions
+                    </span>
                   </TableCell>
 
                   <TableCell className="text-right">

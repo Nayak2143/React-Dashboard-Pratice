@@ -3,9 +3,19 @@ import { BlogCard } from "@/pages/Blogs/components/Cards/BlogCard";
 import { Button } from "@/components/ui/button";
 import { Plus } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { useAuth } from "@/context/AuthContext";
 
 export default function Blogs() {
   const navigate = useNavigate();
+  const { user } = useAuth();
+
+  const hasPermission = (perm: string) => {
+    if (!user) return false;
+
+    if (user.role?.name === "admin") return true;
+
+    return user.role?.permissions?.some((p: any) => p.key === perm);
+  };
   return (
     <div className="space-y-6">
       {/* Page Header */}
@@ -15,15 +25,17 @@ export default function Blogs() {
           <AppBreadcrumb />
         </div>
 
-        <Button
-          variant="outline"
-          size="sm"
-          className="flex items-center gap-2 self-start sm:self-auto"
-          onClick={() => navigate("/blogs/add")}
-        >
-          <Plus className="h-4 w-4" />
-          Add New
-        </Button>
+        {hasPermission("blogs.create") && (
+          <Button
+            variant="outline"
+            size="sm"
+            className="flex items-center gap-2 self-start sm:self-auto"
+            onClick={() => navigate("/blogs/add")}
+          >
+            <Plus className="h-4 w-4" />
+            Add New
+          </Button>
+        )}
       </div>
 
       {/* Content Grid */}

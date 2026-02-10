@@ -106,7 +106,7 @@ export default function Permissions() {
       {/* TABLE */}
       <div className="container-md p-4 border border-border rounded-lg bg-background overflow-x-auto">
         <Table>
-          <TableHeader className="border-b bg-slate-50">
+          <TableHeader className="border-b dark:bg-muted">
             <TableRow className="hover:bg-transparent">
               <TableHead>Permission Name</TableHead>
               <TableHead className="text-right">Action</TableHead>

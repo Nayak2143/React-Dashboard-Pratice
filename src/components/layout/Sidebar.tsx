@@ -39,11 +39,6 @@ const menu = [
         path: "/blogs",
         permission: "blogs.view",
       },
-      {
-        label: "Add Blog",
-        path: "/blogs/add",
-        permission: "blogs.create",
-      },
     ],
   },
   {

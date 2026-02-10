@@ -5,7 +5,7 @@ import AddPermission from "@/pages/Permissions/AddPermission";
 import Permissions from "@/pages/Permissions/Permissions";
 import AddRole from "@/pages/Roles/AddRole";
 import Role from "@/pages/Roles/Role";
-import User from "@/pages/User";
+import User from "@/pages/Users/User";
 
 export const privateRoutes = [
   {
