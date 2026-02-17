@@ -10,6 +10,11 @@ interface Props {
 }
 
 export function ImageUploadDemo({ onImageSelect }: Props) {
+  const handleUpload = useCallback(() => {
+    // Convert URL to File object if needed, or handle the URL directly
+    onImageSelect?.(null);
+  }, [onImageSelect]);
+
   const {
     previewUrl,
     fileName,
@@ -18,7 +23,7 @@ export function ImageUploadDemo({ onImageSelect }: Props) {
     handleFileChange,
     handleRemove,
   } = useImageUpload({
-    onUpload: onImageSelect,
+    onUpload: handleUpload,
   });
 
   const [isDragging, setIsDragging] = useState(false);

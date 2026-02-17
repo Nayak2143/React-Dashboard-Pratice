@@ -3,15 +3,15 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { useForm, FormProvider } from "react-hook-form";
-import PointListEditor from "./components/BlogEditor/PointListEditor";
 import { ImageUploadDemo } from "./components/ImageUpload/ImageUploadDemo";
+import { api } from "@/Instance/Instance";
+import { toast } from "sonner";
+import { useState } from "react";
 
 type BlogFormValues = {
   title: string;
   subtitle: string;
-  slug: string;
   content: string;
-  extraContent: string;
   metaTitle: string;
   metaDescription: string;
   featuredImage?: File | null;
@@ -19,13 +19,13 @@ type BlogFormValues = {
 };
 
 export default function AddNewBlog() {
+  const [saving, setSaving] = useState(false);
+
   const methods = useForm<BlogFormValues>({
     defaultValues: {
       title: "",
       subtitle: "",
-      slug: "",
       content: "",
-      extraContent: "",
       metaTitle: "",
       metaDescription: "",
       featuredImage: null,
@@ -33,24 +33,73 @@ export default function AddNewBlog() {
     },
   });
 
-  const { handleSubmit, register, setValue } = methods;
+  const { handleSubmit, register, setValue, reset } = methods;
 
-  const onSubmit = (data: BlogFormValues) => {
-    console.log("FORM DATA 👉", data);
+  /* ---------------- SUBMIT ---------------- */
+
+  const submitBlog = async (
+    data: BlogFormValues,
+    status: "draft" | "published",
+  ) => {
+    try {
+      setSaving(true);
+
+      const form = new FormData();
+
+      form.append("title", data.title);
+      form.append("subtitle", data.subtitle);
+      form.append("content", data.content);
+      form.append("metaTitle", data.metaTitle);
+      form.append("metaDescription", data.metaDescription);
+      form.append("altText", data.altText);
+      form.append("status", status);
+
+      // ⭐ FILE
+      if (data.featuredImage instanceof File) {
+        form.append("featuredImage", data.featuredImage);
+      }
+
+      /* DEBUG — see what you're sending */
+      for (const pair of form.entries()) {
+        console.log(pair[0], pair[1]);
+      }
+
+      await api.post("/blogs", form); // ❌ don't set content-type manually
+
+      toast.success("Blog created successfully!");
+      reset();
+    } catch (err: any) {
+      console.error(err);
+      toast.error(err?.response?.data?.message || "Failed to create blog");
+    } finally {
+      setSaving(false);
+    }
   };
 
   return (
     <FormProvider {...methods}>
-      <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
-        {/* Header */}
+      <form className="space-y-6" encType="multipart/form-data">
+        {/* HEADER */}
         <div className="flex justify-between">
           <h1 className="text-2xl font-semibold">Add Blog</h1>
 
           <div className="flex gap-2">
-            <Button type="submit" variant="outline">
+            <Button
+              type="button"
+              variant="outline"
+              disabled={saving}
+              onClick={handleSubmit((d) => submitBlog(d, "draft"))}
+            >
               Save Draft
             </Button>
-            <Button type="submit">Publish</Button>
+
+            <Button
+              type="button"
+              disabled={saving}
+              onClick={handleSubmit((d) => submitBlog(d, "published"))}
+            >
+              Publish
+            </Button>
           </div>
         </div>
 
@@ -58,26 +107,19 @@ export default function AddNewBlog() {
         <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
           {/* LEFT */}
           <div className="lg:col-span-2 space-y-6">
-            {/* BASIC */}
             <div className="rounded-xl border p-6 space-y-4 bg-card">
               <Label>Title</Label>
               <Input {...register("title")} />
 
               <Label>Subtitle</Label>
               <Input {...register("subtitle")} />
-
-              <Label>Slug</Label>
-              <Input {...register("slug")} />
             </div>
 
-            {/* CONTENT */}
             <div className="rounded-xl border p-6 space-y-4 bg-card">
-              <Textarea rows={8} {...register("content")}/>
+              <Label>Content</Label>
+              <Textarea rows={8} {...register("content")} />
             </div>
 
-            <PointListEditor />
-
-            {/* SEO */}
             <div className="rounded-xl border p-6 space-y-4 bg-card">
               <Label>Meta Title</Label>
               <Input {...register("metaTitle")} />
@@ -93,7 +135,9 @@ export default function AddNewBlog() {
               <h3 className="font-semibold">Featured Image</h3>
 
               <ImageUploadDemo
-                onImageSelect={(file: any) => setValue("featuredImage", file)}
+                onImageSelect={(file) =>
+                  setValue("featuredImage", file || null)
+                }
               />
 
               <Label>Alt Text</Label>
