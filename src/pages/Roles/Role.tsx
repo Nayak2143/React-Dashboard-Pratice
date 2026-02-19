@@ -10,7 +10,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { api } from "@/Instance/Instance";
-import { Plus } from "lucide-react";
+import { Edit, Plus, Trash2 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Label } from "@/components/ui/label";
@@ -51,7 +51,6 @@ export default function RolePage() {
   const [editRoleId, setEditRoleId] = useState<Number | null>(null);
 
   /* -------- FETCH DATA -------- */
-
   const fetchRoles = async () => {
     try {
       setLoading(true);
@@ -80,7 +79,6 @@ export default function RolePage() {
   }, []);
 
   /* -------- CHECKBOX TOGGLE -------- */
-
   const togglePermission = (id: number) => {
     setSelectedPerms((prev) =>
       prev.includes(id) ? prev.filter((p) => p !== id) : [...prev, id],
@@ -134,6 +132,18 @@ export default function RolePage() {
       console.error("Role creation failed:", err);
     } finally {
       setSaving(false);
+    }
+  };
+
+  const handleDeleteRole = async (id: number) => {
+    try {
+      if (!confirm("Are you sure you want to delete this role?")) return;
+
+      const res = await api.delete(`/roles/${id}`);
+      toast.success(res.data.message);
+      fetchRoles();
+    } catch (error) {
+      toast.error("Failed to delete role");
     }
   };
 
@@ -214,7 +224,7 @@ export default function RolePage() {
             <TableRow>
               <TableHead>Name</TableHead>
               <TableHead>Permissions</TableHead>
-              <TableHead className="text-right">Action</TableHead>
+              <TableHead>Action</TableHead>
             </TableRow>
           </TableHeader>
 
@@ -250,10 +260,11 @@ export default function RolePage() {
                     </span>
                   </TableCell>
 
-                  <TableCell className="text-right">
+                  <TableCell className="flex items-center gap-2">
                     <Button
                       size="sm"
                       variant="outline"
+                      className="cursor-pointer border-0 shadow-none hover:text-yellow-700 hover:bg-yellow-50"
                       onClick={() => {
                         setEditRoleId(role?.id);
                         setRoleName(role?.name);
@@ -261,7 +272,15 @@ export default function RolePage() {
                         setSheetOpen(true);
                       }}
                     >
-                      Edit
+                      <Edit />
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className="cursor-pointer border-0 shadow-none hover:text-red-700 hover:bg-red-50"
+                      onClick={() => handleDeleteRole(role.id)}
+                    >
+                      <Trash2 />
                     </Button>
                   </TableCell>
                 </TableRow>
