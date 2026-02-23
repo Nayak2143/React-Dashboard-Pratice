@@ -66,8 +66,8 @@ export default function Sidebar() {
 
   /* ---------- AUTO EXPAND ACTIVE PARENT ---------- */
   useEffect(() => {
-    menu.forEach((item) => {
-      if (item.children?.some((c) => location.pathname.startsWith(c.path))) {
+    menu.forEach((item:any) => {
+      if (item.children?.some((c:any) => location.pathname.startsWith(c.path))) {
         setOpenMenus((prev) =>
           prev.includes(item.label) ? prev : [...prev, item.label],
         );
@@ -103,18 +103,18 @@ export default function Sidebar() {
 
       {/* ---------------- NAV ---------------- */}
       <nav className="flex-1 p-3 space-y-1 overflow-y-auto">
-        {menu.map((item) => {
+        {menu.map((item:any) => {
           const Icon = item.icon;
 
           const parentAllowed = hasPermission(item.permission);
 
           const childAllowed =
-            item.children?.some((c) => hasPermission(c.permission)) ?? false;
+            item.children?.some((c:any) => hasPermission(c.permission)) ?? false;
 
           if (!parentAllowed && !childAllowed) return null;
 
           const isParentActive =
-            item.children?.some((c) => location.pathname.startsWith(c.path)) ||
+            item.children?.some((c:any) => location.pathname.startsWith(c.path)) ||
             location.pathname === item.path;
 
           /* ---------- SIMPLE LINK ---------- */
@@ -167,8 +167,8 @@ export default function Sidebar() {
               {openMenus.includes(item.label) && (
                 <div className="ml-6 space-y-1">
                   {item.children
-                    .filter((child) => hasPermission(child.permission))
-                    .map((child) => (
+                    .filter((child:any) => hasPermission(child.permission))
+                    .map((child:any) => (
                       <NavLink
                         key={child.path}
                         to={child.path}
@@ -177,7 +177,7 @@ export default function Sidebar() {
                             "block rounded-md px-3 py-2 text-sm transition-colors",
                             "hover:bg-white dark:hover:bg-gray-100",
                             isActive
-                              ? "bg-orange-50 text-orange-600 dark:bg-orange-100"
+                              ? "bg-orange-50 text-orange-600 dark:bg-orange-100/10"
                               : "text-muted-foreground",
                           )
                         }
